@@ -28,6 +28,25 @@ func GetLocalidad(db *sql.DB, table string, column string, value string, idMunic
 	return localidad, nil
 }
 
+func GetLocalidadesDeMunicipio(db *sql.DB, idMunicipio int) ([]Localidad, error) {
+	var localidades []Localidad
+	query := "SELECT idLocalidad, nombre, idMunicipio FROM localidades WHERE idMunicipio=" + strconv.Itoa(idMunicipio)
+	rows, err := db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var localidad Localidad
+		err = rows.Scan(&localidad.idLocalidad, &localidad.nombre, &localidad.idMunicipio)
+		if err != nil {
+			return nil, err
+		}
+		localidades = append(localidades, localidad)
+	}
+	return localidades, nil
+}
+
 func LocalidadExiste(db *sql.DB, table string, column string, value string, idMunicipio int) (bool, error) {
 	query := "SELECT * FROM " + table + " WHERE " + column + "='" + value + "' AND idMunicipio=" + strconv.Itoa(idMunicipio)
 

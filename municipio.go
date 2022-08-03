@@ -24,6 +24,25 @@ func GetMunicipio(db *sql.DB, table string, column string, value string) (Munici
 	return municipio, nil
 }
 
+func GetMunicipios(db *sql.DB, table string) ([]Municipio, error) {
+	var municipios []Municipio
+	query := "SELECT idMunicipio, nombre FROM " + table
+	rows, err := db.Query(query)
+	if err != nil {
+		return municipios, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var municipio Municipio
+		err = rows.Scan(&municipio.idMunicipio, &municipio.nombre)
+		if err != nil {
+			return municipios, err
+		}
+		municipios = append(municipios, municipio)
+	}
+	return municipios, nil
+}
+
 func MunicipioExiste(db *sql.DB, table string, column string, value string) (bool, error) {
 	query := "SELECT * FROM " + table + " WHERE " + column + "='" + value + "'"
 

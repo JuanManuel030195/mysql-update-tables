@@ -168,6 +168,66 @@ func main() {
 
 	fmt.Printf("Activos actualizados: %d\r\n", activosActualizados)
 
+	// Actualiza edificios con idLocalidad
+	edificiosActualizados := 0
+
+	municipiosEnDB, err := GetMunicipios(localDB, "municipios")
+
+	if err != nil {
+		panic(err.Error())
+	}
+
+	for _, municipioEnDB := range municipiosEnDB {
+
+		localidadesDelMunicipio, err := GetLocalidadesDeMunicipio(localDB, municipioEnDB.idMunicipio)
+
+		if err != nil {
+			panic(err.Error())
+		}
+
+		for _, localidadEnDB := range localidadesDelMunicipio {
+
+			activosPorMunicipioLocalidad, err := GetActivosPorMunicipioLocalidad(localDB, municipioEnDB.idMunicipio, localidadEnDB.idLocalidad)
+
+			if err != nil {
+				panic(err.Error())
+			}
+
+			var idEdificios []int32
+			for _, activo := range activosPorMunicipioLocalidad {
+				if !activo.idEdificio.Valid {
+					continue
+				}
+
+				idEdificio := activo.idEdificio.Int32
+
+				edificioYaAgregado := false
+				for _, idEdificioGuardado := range idEdificios {
+					if idEdificioGuardado == idEdificio {
+						edificioYaAgregado = true
+						break
+					}
+				}
+
+				if !edificioYaAgregado {
+					idEdificios = append(idEdificios, idEdificio)
+				}
+			}
+
+			for _, idEdificio := range idEdificios {
+				err = UpdateEdificioById(localDB, int(idEdificio), "idLocalidad", localidadEnDB.idLocalidad)
+
+				if err != nil {
+					panic(err.Error())
+				}
+
+				edificiosActualizados++
+			}
+		}
+	}
+
+	fmt.Printf("Edificios actualizados: %d\r\n", edificiosActualizados)
+
 	programEndTime := time.Now()
 	programDuration := programEndTime.Sub(programStartTime)
 	fmt.Println("Program duration: ", programDuration)
